@@ -52,10 +52,13 @@ pipeline {
             steps {
                 echo "Running SonarQube analysis..."
                 withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner -Dsonar.projectKey=task-manager -Dsonar.sources=. -Dsonar.login=$SONAR_TOKEN'
+                    // Use the installed SonarQube Scanner tool
+                    def scannerHome = tool name: 'SonarQubeScanner', type: hudson.plugins.sonar.SonarRunnerInstallation
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=task-manager -Dsonar.sources=. -Dsonar.login=$SONAR_TOKEN"
                 }
             }
         }
+
 
         // 4. Security Stage
         stage('Security Scan') {
