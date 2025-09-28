@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         nodejs "node" // must match your NodeJS installation in Jenkins
-        // Make sure "SonarQubeScanner" is installed in Jenkins Global Tool Config
+        // Ensure "SonarQubeScanner" is installed in Jenkins Global Tool Config
     }
 
     environment {
@@ -33,7 +33,7 @@ pipeline {
                 sh '''
                     # Run Jest tests with coverage and JUnit reporter
                     npx --no-install jest --coverage --reporters=default --reporters=jest-junit || true
-
+                    
                     # Move JUnit report to a folder Jenkins can read
                     mkdir -p test-reports
                     if [ -f junit.xml ]; then mv junit.xml test-reports/; fi
@@ -52,9 +52,11 @@ pipeline {
             steps {
                 echo "Running SonarQube analysis..."
                 withSonarQubeEnv('SonarQube') {
-                    // Use the installed SonarQube Scanner tool
-                    def scannerHome = tool name: 'SonarQubeScanner', type: hudson.plugins.sonar.SonarRunnerInstallation
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=task-manager -Dsonar.sources=. -Dsonar.login=$SONAR_TOKEN"
+                    script {
+                        // Use the installed SonarQube Scanner tool
+                        def scannerHome = tool 'SonarQubeScanner'
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=task-manager -Dsonar.sources=. -Dsonar.login=$SONAR_TOKEN"
+                    }
                 }
             }
         }
@@ -63,10 +65,8 @@ pipeline {
         stage('Security Scan') {
             steps {
                 echo "Running Snyk security scan..."
-                sh '''
-                    echo $SNYK_TOKEN | snyk auth
-                    snyk test || true
-                '''
+                sh 'echo $SNYK_TOKEN | snyk auth'
+                sh 'snyk test || true'
             }
         }
 
