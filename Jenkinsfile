@@ -7,8 +7,8 @@ pipeline {
     }
 
     environment {
-        SONAR_TOKEN = credentials('SONARQUBE_TOKEN')  // SonarQube secret text credential ID
-        SNYK_TOKEN = credentials('SNYK_TOKEN')        // Snyk secret text credential ID
+        SONAR_TOKEN = credentials('SONAR_TOKEN')  // SonarQube secret text credential ID
+        SNYK_TOKEN = credentials('SNYK_TOKEN')    // Snyk secret text credential ID
     }
 
     stages {
@@ -20,7 +20,7 @@ pipeline {
                 sh 'node -v'
                 sh 'npm -v'
                 sh 'npm install'
-                // Make Jest binary executable (fixes permission denied)
+                // Make Jest binary executable
                 sh 'chmod +x ./node_modules/.bin/jest || true'
                 sh 'npm run build || echo "No build step, skipping..."'
             }
@@ -54,8 +54,14 @@ pipeline {
                 withSonarQubeEnv('SonarQube') {
                     script {
                         // Use the installed SonarQube Scanner tool
-                        def scannerHome = tool 'SonarQubeScanner'
-                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=task-manager -Dsonar.sources=. -Dsonar.login=$SONAR_TOKEN"
+                        def scannerHome = tool name: 'SonarQubeScanner', type: hudson.plugins.sonar.SonarRunnerInstallation
+                        sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=task-manager \
+                            -Dsonar.sources=. \
+                            -Dsonar.login=${SONAR_TOKEN} \
+                            -Dsonar.host.url=http://localhost:9000
+                        """
                     }
                 }
             }
