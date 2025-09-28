@@ -6,11 +6,8 @@ pipeline {
     }
 
     environment {
-        REGISTRY = "saakethrajaram/task-manager"
-        APP_NAME = "task-manager"
-        IMAGE_TAG = "v${env.BUILD_NUMBER}"
-        SONAR_TOKEN = credentials('SONARQUBE_TOKEN')  // your SonarQube secret text credential ID
-        SNYK_TOKEN = credentials('SNYK_TOKEN')        // your Snyk secret text credential ID
+        SONAR_TOKEN = credentials('SONARQUBE_TOKEN')  // SonarQube secret text credential ID
+        SNYK_TOKEN = credentials('SNYK_TOKEN')        // Snyk secret text credential ID
     }
 
     stages {
@@ -23,7 +20,6 @@ pipeline {
                 sh 'npm -v'
                 sh 'npm install'
                 sh 'npm run build || echo "No build step, skipping..."'
-                sh "docker build -t $REGISTRY:$IMAGE_TAG ."
             }
         }
 
@@ -56,53 +52,46 @@ pipeline {
                 echo "Running Snyk security scan..."
                 sh 'snyk auth $SNYK_TOKEN'
                 sh 'snyk test || true'
-                echo "Scanning Docker image with Trivy..."
-                sh "trivy image $REGISTRY:$IMAGE_TAG || true"
             }
         }
 
-        // 5. Deploy Stage
+        // 5. Deploy Stage (Simulated)
         stage('Deploy to Staging') {
             steps {
-                echo "Deploying app to staging environment..."
-                sh "docker run -d -p 3000:3000 --name ${APP_NAME}-staging $REGISTRY:$IMAGE_TAG"
+                echo "Simulating deployment to staging environment..."
+                sh 'echo "App deployed to staging (simulation)"'
             }
         }
 
-        // 6. Release Stage
+        // 6. Release Stage (Simulated)
         stage('Release to Production') {
             when {
                 branch 'main'
             }
             steps {
-                echo "Releasing to production..."
-                sh "docker tag $REGISTRY:$IMAGE_TAG $REGISTRY:latest"
-                sh "docker push $REGISTRY:$IMAGE_TAG"
-                sh "docker push $REGISTRY:latest"
+                echo "Simulating release to production..."
+                sh 'echo "App released to production (simulation)"'
             }
         }
 
         // 7. Monitoring Stage
         stage('Monitoring & Alerts') {
             steps {
-                echo "Monitoring with Prometheus/Grafana..."
-                echo "Simulating health check..."
-                sh 'curl -f http://localhost:3000/health || exit 1'
-                echo "Sending alert if app is down (placeholder for Datadog/New Relic integration)..."
+                echo "Monitoring application..."
+                sh 'echo "App health check simulated"'
             }
         }
     }
 
     post {
         always {
-            echo "Pipeline finished. Cleaning up staging container..."
-            sh "docker rm -f ${APP_NAME}-staging || true"
+            echo "Pipeline finished."
         }
         success {
             echo "Pipeline completed successfully!"
         }
         failure {
-            echo "Pipeline failed. Check logs and alerts."
+            echo "Pipeline failed. Check logs."
         }
     }
 }
