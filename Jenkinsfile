@@ -2,7 +2,11 @@ pipeline {
     agent any
 
     environment {
-        SONAR_TOKEN = credentials('SONAR_TOKEN') // Use the Jenkins credential ID
+        SONAR_TOKEN = credentials('SONAR_TOKEN') // Your Jenkins Sonar token
+    }
+
+    tools {
+        nodejs 'NodeJS_24' // Match the name you gave in Global Tool Configuration
     }
 
     stages {
@@ -17,7 +21,6 @@ pipeline {
                 echo 'Installing dependencies...'
                 sh 'npm install'
 
-                // Run build if exists
                 script {
                     def packageJson = readJSON file: 'package.json'
                     if (packageJson.scripts?.build) {
@@ -32,7 +35,7 @@ pipeline {
                 sh 'chmod +x ./node_modules/.bin/jest'
                 sh 'npx --no-install jest --coverage --reporters=default --reporters=jest-junit'
                 sh 'mkdir -p test-reports'
-                sh 'mv junit.xml test-reports/ || true' // Move JUnit report if exists
+                sh 'mv junit.xml test-reports/ || true'
                 junit 'test-reports/junit.xml'
             }
         }
@@ -40,7 +43,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def scannerHome = tool 'SonarScanner' // Replace with your SonarScanner tool name in Jenkins
+                    def scannerHome = tool 'SonarScanner'
                     withSonarQubeEnv('SonarQube') {
                         sh "${scannerHome}/bin/sonar-scanner -Dsonar.login=$SONAR_TOKEN"
                     }
