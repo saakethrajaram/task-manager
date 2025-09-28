@@ -29,13 +29,17 @@ pipeline {
         stage('Test') {
             steps {
                 echo "Running unit tests..."
-                // Use npx with --no-install to run local Jest
-                sh 'npx --no-install jest --coverage --reporters=default --reporters=jest-junit || true'
+                // Ensure jest-junit reporter works
+                sh '''
+                    npx --no-install jest --coverage --reporters=default --reporters=jest-junit || true
+                    mkdir -p test-reports
+                    mv junit.xml test-reports/ || true
+                '''
             }
             post {
                 always {
-                    // JUnit reports for Jenkins
-                    junit '**/junit.xml'
+                    // Point Jenkins to the correct location for JUnit reports
+                    junit 'test-reports/junit.xml'
                 }
             }
         }
