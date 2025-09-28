@@ -1,16 +1,12 @@
 pipeline {
     agent any
-    tools {
-        nodejs 'NodeJS_24' // must match the NodeJS name in Jenkins config
-    }
+    tools { nodejs 'NodeJS_24' } // NodeJS configured in Jenkins
     stages {
-        stage('Checkout') {
-            steps { checkout scm }
-        }
+        stage('Checkout') { steps { checkout scm } }
         stage('Install & Test') {
             steps {
                 sh 'npm install'
-                sh 'npx jest --coverage --reporters=default --reporters=jest-junit'
+                sh './node_modules/.bin/jest --coverage --reporters=default --reporters=jest-junit'
             }
         }
         stage('SonarQube Analysis') {
@@ -21,7 +17,5 @@ pipeline {
             }
         }
     }
-    post {
-        always { echo 'Pipeline finished.' }
-    }
+    post { always { echo 'Pipeline finished.' } }
 }
