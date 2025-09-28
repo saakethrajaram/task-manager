@@ -33,7 +33,7 @@ pipeline {
                 sh '''
                     # Run Jest tests with coverage and JUnit reporter
                     npx --no-install jest --coverage --reporters=default --reporters=jest-junit || true
-                    
+
                     # Move JUnit report to a folder Jenkins can read
                     mkdir -p test-reports
                     if [ -f junit.xml ]; then mv junit.xml test-reports/; fi
@@ -59,13 +59,14 @@ pipeline {
             }
         }
 
-
         // 4. Security Stage
         stage('Security Scan') {
             steps {
                 echo "Running Snyk security scan..."
-                sh 'echo $SNYK_TOKEN | snyk auth'
-                sh 'snyk test || true'
+                sh '''
+                    echo $SNYK_TOKEN | snyk auth
+                    snyk test || true
+                '''
             }
         }
 
