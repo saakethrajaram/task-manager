@@ -27,11 +27,12 @@ pipeline {
         stage('Test') {
             steps {
                 echo "Running unit tests..."
-                sh 'npm test -- --ci --reporters=default --reporters=jest-junit'
+                sh 'npx jest --coverage --reporters=default --reporters=jest-junit'
             }
             post {
                 always {
-                    junit 'junit.xml'
+                    // JUnit reports for Jenkins
+                    junit '**/junit.xml'
                 }
             }
         }
@@ -41,7 +42,7 @@ pipeline {
             steps {
                 echo "Running SonarQube analysis..."
                 withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner -Dsonar.projectKey=task-manager -Dsonar.sources=.'
+                    sh 'sonar-scanner -Dsonar.projectKey=task-manager -Dsonar.sources=. -Dsonar.login=$SONAR_TOKEN'
                 }
             }
         }
@@ -50,7 +51,7 @@ pipeline {
         stage('Security Scan') {
             steps {
                 echo "Running Snyk security scan..."
-                sh 'snyk auth $SNYK_TOKEN'
+                sh 'echo $SNYK_TOKEN | snyk auth'
                 sh 'snyk test || true'
             }
         }
