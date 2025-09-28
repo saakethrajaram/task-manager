@@ -1,17 +1,26 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs "node" // must match your NodeJS installation in Jenkins
+    }
+
     environment {
         REGISTRY = "saakethrajaram/task-manager"
         APP_NAME = "task-manager"
         IMAGE_TAG = "v${env.BUILD_NUMBER}"
+        SONAR_TOKEN = credentials('SONARQUBE_TOKEN')  // your SonarQube secret text credential ID
+        SNYK_TOKEN = credentials('SNYK_TOKEN')        // your Snyk secret text credential ID
     }
 
     stages {
+
         // 1. Build Stage
         stage('Build') {
             steps {
                 echo "Building Node.js application..."
+                sh 'node -v'
+                sh 'npm -v'
                 sh 'npm install'
                 sh 'npm run build || echo "No build step, skipping..."'
                 sh "docker build -t $REGISTRY:$IMAGE_TAG ."
@@ -44,8 +53,9 @@ pipeline {
         // 4. Security Stage
         stage('Security Scan') {
             steps {
-                echo "Running dependency security scan with Snyk..."
-                sh 'snyk test || true'  // don’t fail the build immediately, document results
+                echo "Running Snyk security scan..."
+                sh 'snyk auth $SNYK_TOKEN'
+                sh 'snyk test || true'
                 echo "Scanning Docker image with Trivy..."
                 sh "trivy image $REGISTRY:$IMAGE_TAG || true"
             }
