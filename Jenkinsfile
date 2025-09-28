@@ -3,6 +3,7 @@ pipeline {
 
     tools {
         nodejs "node" // must match your NodeJS installation in Jenkins
+        // Make sure "SonarQubeScanner" is installed in Jenkins Global Tool Config
     }
 
     environment {
@@ -29,11 +30,13 @@ pipeline {
         stage('Test') {
             steps {
                 echo "Running unit tests..."
-                // Ensure jest-junit reporter works
                 sh '''
+                    # Run Jest tests with coverage and JUnit reporter
                     npx --no-install jest --coverage --reporters=default --reporters=jest-junit || true
+                    
+                    # Move JUnit report to a folder Jenkins can read
                     mkdir -p test-reports
-                    mv junit.xml test-reports/ || true
+                    if [ -f junit.xml ]; then mv junit.xml test-reports/; fi
                 '''
             }
             post {
